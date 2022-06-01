@@ -73,8 +73,8 @@ class Command(BaseCommand):
         grpc_settings.ROOT_HANDLERS_HOOK(server)
         server.add_insecure_port(self.address)
         server.start(self.port)
-        start_http_server(53355)
-        print("The metrics server has started at localhost:53355")
+        start_http_server(self.port)
+        print(f"The metrics server has started at localhost:{self.port}")
         server.wait_for_termination()
 
     def inner_run(self, *args, **options):
