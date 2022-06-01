@@ -4,7 +4,8 @@ from datetime import datetime
 import sys
 import errno
 import os
-
+from prometheus_client import start_http_server
+from py_grpc_prometheus.prometheus_server_interceptor import PromServerInterceptor
 import grpc
 from django.utils import autoreload
 from django.conf import settings
@@ -23,6 +24,10 @@ class Command(BaseCommand):
         parser.add_argument(
             'address', nargs='?', default='[::]:50051',
             help='Optional address for which to open a port.'
+        )
+        parser.add_argument(
+            'port', nargs='?', default=53355,
+            help='port number'
         )
         parser.add_argument(
             '--max-workers', type=int, default=10, dest='max_workers',
@@ -59,10 +64,17 @@ class Command(BaseCommand):
 
     def _serve(self):
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=self.max_workers),
-                             interceptors=grpc_settings.SERVER_INTERCEPTORS)
+                             interceptors=(PromServerInterceptor(
+                                 enable_handling_time_histogram=True,
+                                 skip_exceptions=True,
+                                 legacy=True
+                             ),
+                             ))
         grpc_settings.ROOT_HANDLERS_HOOK(server)
         server.add_insecure_port(self.address)
-        server.start()
+        server.start(self.port)
+        start_http_server(53355)
+        print("The metrics server has started at localhost:53355")
         server.wait_for_termination()
 
     def inner_run(self, *args, **options):
