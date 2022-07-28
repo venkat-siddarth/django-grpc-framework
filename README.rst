@@ -1,3 +1,8 @@
+
+MODIFIED: Enabled gRPC interceptor in order to generate metrics in django
+=====================
+
+
 Django gRPC Framework
 =====================
 
